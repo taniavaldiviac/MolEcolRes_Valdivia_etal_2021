@@ -19,22 +19,22 @@ library(FD)
 
 DATA
 ```{r}
-edna_reads<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/edna.csv",row.names = 1)
+edna_reads<-read.csv("edna.csv",row.names = 1)
 ```
 
 UVC
 ```{r}
-data_UVC<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/uvc.csv",row.names = 1)
+data_UVC<-read.csv("uvc.csv",row.names = 1)
 ```
 
 SPATIAL
 ```{r}
-spa<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/spa.csv", row.names = 1)
+spa<-read.csv("spa.csv", row.names = 1)
 ```
 
 ENVIRONMENTAL
 ```{r}
-env<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/env.csv", row.names = 1)
+env<-read.csv("env.csv", row.names = 1)
 ```
 
 -----------------------------------------
@@ -301,9 +301,6 @@ Group dispersions are not homogeneous, difference in dispersion between groups
 anova(mod2)
 ```
 
-
-# Now that we know that groups have homogenous variances, we can test if compositions are different (remember that groups have very different species when we saw the downloaded data). Before performing adonis we might want to see our first two PCoA axes to see how our data fits there:
-
 ```{r}
 plot(mod2)
 ```
@@ -314,8 +311,6 @@ PERMANOVA
 ```{r}
 adonis(spe.jac ~ region1, perm=9999)
 ```
-
-# Observing our results we can see that groups have significantly different compositions (p<0.05). So our groups (north and central) dont present homogeneity among group dispersions (compositions differ)
 
 ```{r}
 adonis(UVC.jac ~ region1, perm=9999)
@@ -418,7 +413,7 @@ library(forcats)
 ```
 
 ```{r}
-Sobs_m_r<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/Sobs_method_region.csv",header=TRUE, colClasses = c("factor","factor","factor","numeric"))
+Sobs_m_r<-read.csv("Sobs_method_region.csv",header=TRUE, colClasses = c("factor","factor","factor","numeric"))
 head(Sobs_m_r)
 ```
 
