@@ -1,0 +1,476 @@
+---
+title: "Valdivia et al 2021"
+author: "Tania Valdivia Carrillo"
+date: "04/11/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+# Load the required packages
+library(ade4)
+library(adespatial)
+library(vegan)
+library(gclus)
+library(cluster)
+library(FD)
+```
+
+DATA
+```{r}
+edna_reads<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/edna.csv",row.names = 1)
+```
+
+UVC
+```{r}
+data_UVC<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/uvc.csv",row.names = 1)
+```
+
+SPATIAL
+```{r}
+spa<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/spa.csv", row.names = 1)
+```
+
+ENVIRONMENTAL
+```{r}
+env<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/env.csv", row.names = 1)
+```
+
+-----------------------------------------
+Abundance distribution
+-----------------------------------------
+count abundances eDNA
+```{r}
+#Count cases for each abundance class
+ab<-table(unlist(edna_reads))
+hist(log10(ab), xlab="Abundance class")
+```
+
+```{r}
+#Barplot of the distribution , all species
+barplot(ab, las=1, log="y", xlab="Read Abundance", ylab="Frequency", col="gray")
+```
+
+
+count abundances UVC
+```{r}
+#Count cases for each abundance class
+ab_UVC<-table(unlist(data_UVC))
+hist(log10(ab_UVC), xlab="Abundance class")
+```
+
+```{r}
+#Barplot of the distribution , all species confoundes
+barplot(ab_UVC, las=1, log="y", xlab="Ind Abundance", ylab="Frequency", col="gray")
+```
+
+----------------
+Read abundance / specie, Ind abundance/specie
+----------------
+```{r}
+spe_presence<-apply(edna_reads,2,sum)
+spe_presence<-sort(spe_presence)
+plot(spe_presence, pch=16, col="black", cex=0.5, ylab="Read abundace", xlab="OTU", log="y")
+```
+```{r}
+spe_presence_UVC<-apply(data_UVC,2,sum)
+spe_presence_UVC<-sort(spe_presence_UVC)
+plot(spe_presence_UVC, pch=16, col="black", cex=0.5, ylab="Ind abundace", xlab="Species", log="y")
+```
+-------------
+DIVERSITY INDICES
+-----------------
+
+```{r}
+#Species richness
+S.eDNA<-rowSums(edna_reads>0)
+#Shannon entropy
+H<-diversity(edna_reads)
+#Shannon diversity number
+N1<-exp(H)
+#Eveness
+J <- H / log(S.eDNA)
+(diversity_index_edna<-data.frame(S.eDNA,H,N1,J))
+```
+
+```{r}
+S.UVC<-rowSums(data_UVC>0)
+#Shannon entropy
+H.UVC<-diversity(data_UVC)
+#Shannon diversity number
+N1.UVC<-exp(H.UVC)
+#EVENESS
+J.UVC <- H.UVC / log(S.UVC)
+```
+
+
+```{r}
+(diversity_index_edna<-data.frame(S.UVC,H,N1,J))
+```
+
+```{r}
+(diversity_index_uvc<-data.frame(S.UVC,H.UVC,N1.UVC,J.UVC))
+```
+Plot
+
+```{r}
+sit.pres<-apply(edna_reads>0,1, sum)
+(sit.pres.sorted<-sort(sit.pres))
+
+plot(sit.pres, type="h", ylim=c(10,60),las=1, col="royalblue3",cex.main=1, main="Observed OTUs eDNA", cex.lab=1, cex.axis=1, ylab="Sobs",xlab="Sites", family="Helvetica")
+text(sit.pres, row.names(edna_reads), cex=0.55, pos=3,col="black", family="Helvetica")
+```
+
+```{r}
+sit.pres.UVC<-apply(data_UVC>0,1, sum)
+(sit.pres.sorted.UVC<-sort(sit.pres.UVC))
+plot(sit.pres.UVC, type="h", ylim=c(10,60),las=1, col="royalblue3",cex.main=1, main="Observed species UVC", cex.lab=1, cex.axis=1, ylab="Sobs",xlab="Sites", family="Helvetica")
+text(sit.pres.UVC, row.names(data_UVC), cex=0.55, pos=3,col="black", family="Helvetica")
+```
+
+```{r}
+## Compare sites: species richness
+# Compute the number of species at each site
+# To sum by rows, the second argument of apply(), MARGIN, is
+# set to 1
+sit.pres <- apply(edna_reads > 0, 1, sum)
+# Sort the results in increasing order
+sort(sit.pres)
+par(mfrow = c(1, 2))
+# Plot species richness vs. position of the sites along the river
+plot(sit.pres,type = "s",
+las = 1,
+col = "gray",
+main = "Sobs/site eDNA",
+xlab = "Sites",
+ylab = "Sobs"
+)
+text(sit.pres, row.names(edna_reads), cex = .6, col = "black")
+# Use geographic coordinates to plot a bubble map
+plot(spa,
+asp = 1,
+main = "Sobs Latitudinal gradient eDNA",
+pch = 21,
+col = "white",
+bg = "red",
+cex =   (sit.pres / min(sit.pres))^2,
+xlab = "x coordinate",
+ylab = "y coordinate"
+)
+lines(spa, col = "light blue")
+```
+
+```{r}
+## Compare sites: species richness
+# Compute the number of species at each site
+# To sum by rows, the second argument of apply(), MARGIN, is
+# set to 1
+sit.pres.UVC <- apply(data_UVC > 0, 1, sum)
+# Sort the results in increasing order
+sort(sit.pres.UVC)
+par(mfrow = c(1, 2))
+# Plot species richness vs. position of the sites along the river
+plot(sit.pres.UVC,type = "s",
+las = 1,
+col = "gray",
+main = "Sobs/site UVC",
+xlab = "Sites",
+ylab = "Sobs"
+)
+text(sit.pres.UVC, row.names(edna_reads), cex = .6, col = "black")
+# Use geographic coordinates to plot a bubble map
+plot(spa,
+asp = 1,
+main = "Sobs Latitudinal gradient UVC",
+pch = 21,
+col = "white",
+bg = "red",
+cex =   (sit.pres.UVC / min(sit.pres.UVC)),
+xlab = "x coordinate",
+ylab = "y coordinate"
+)
+lines(spa, col = "light blue")
+```
+
+```{r}
+#build a expected curve (randomization for boxplot comparison)
+edna.specaccum.rand <- specaccum(edna_reads, "random", permutations = 1000)
+uvc.specaccum.rand <- specaccum(data_UVC, "random", permutations = 1000)
+
+
+par(mfrow = c(1, 2))
+#build a expected curve (randomization for boxplot comparison)
+plot(uvc.specaccum.rand,ci.type="poly", col="cornflowerblue",ylab="Sobs", xlab="Samples", lwd=2, ci.lty=0, ci.col="papayawhip", main="UVC")
+plot(edna.specaccum.rand,ci.type="poly", col="cornflowerblue",ylab="Sobs", xlab="Samples", lwd=2, ci.lty=0, ci.col="papayawhip", main="eDNA metabarcoding")
+
+```
+
+
+```{r}
+#rarefaction OTUs richness
+(S<-specnumber(edna_reads))
+(raremax <- min(rowSums(edna_reads)))
+(Srare<-rarefy(edna_reads,raremax))
+plot(S, Srare, xlab = "Observed No. of Species", ylab = "Rarefied No. of Species")
+abline(0, 1)
+rarecurve(edna_reads, step = 20, xlab = "Reads",ylab = "Richness", sample = raremax, col = "cornflowerblue", cex = 0.6,main="Rarefaction eDNA")
+```
+
+```{r}
+#rarefaction species richness
+
+(S.UVC<-specnumber(data_UVC))
+(raremax.UVC <- min(rowSums(data_UVC)))
+(Srare.UVC<-rarefy(data_UVC,raremax.UVC))
+plot(S.UVC, Srare.UVC, xlab = "Observed No. of Species", ylab = "Rarefied No. of Species")
+abline(0, 1)
+rarecurve(data_UVC, step = 20, xlab = "Individuals",ylab = "Richness", sample = raremax.UVC, col = "cornflowerblue", cex = 0.6, main="Rarefaction UVC")
+```
+
+```{r}
+#get richness estimators (for each sample, cumulative)
+pool.trasect.rare <- poolaccum(edna_reads)
+#plot all: obs richness and  estimators
+plot(pool.trasect.rare)
+```
+
+```{r}
+summary(pool.trasect.rare)
+```
+
+```{r}
+#get richness estimators (for each sample, cumulative)
+pool.trasect.rare.UVC <- poolaccum(data_UVC)
+#plot all: obs richness and  estimators
+plot(pool.trasect.rare.UVC)
+
+```
+
+```{r}
+summary(pool.trasect.rare.UVC)
+```
+
+----------------
+JACCARD DISTANCE MATRIX
+----------------
+```{r}
+spe.jac <- vegdist(edna_reads,method="jac", binary=TRUE)
+```
+
+```{r}
+UVC.jac <- vegdist(data_UVC,method="jac", binary=TRUE)
+```
+----------------
+BETADISPER
+----------------
+
+1. Determine regions as factors
+```{r}
+#2 regions
+region1<-as.factor(env$region)
+```
+
+2. We now have to use the distance matrix to calculate the multivariate dispersions (variances; average distance to centroids):
+
+```{r}
+mod1 <- betadisper(spe.jac, region1)
+```
+
+```{r}
+anova(mod1)
+```
+
+```{r}
+adonis(spe.jac ~ region1, perm=9999)
+```
+
+```{r}
+plot(mod1)
+```
+
+```{r}
+mod2 <- betadisper(UVC.jac, region1)
+```
+
+As mentioned before, we have to use group dispersions to perform an ANOVA test. We will see that the ANOVA's p-value is not significant meaning that group dispersions are homogenous ("Null hypothesis of no difference in dispersion between groups"; https://www.rdocumentation.org/packages/vegan/versions/2.4-2/topics/betadisper).
+
+Group dispersions are not homogeneous, difference in dispersion between groups
+
+```{r}
+anova(mod2)
+```
+
+
+# Now that we know that groups have homogenous variances, we can test if compositions are different (remember that groups have very different species when we saw the downloaded data). Before performing adonis we might want to see our first two PCoA axes to see how our data fits there:
+
+```{r}
+plot(mod2)
+```
+
+------------
+PERMANOVA
+------------
+```{r}
+adonis(spe.jac ~ region1, perm=9999)
+```
+
+# Observing our results we can see that groups have significantly different compositions (p<0.05). So our groups (north and central) dont present homogeneity among group dispersions (compositions differ)
+
+```{r}
+adonis(UVC.jac ~ region1, perm=9999)
+```
+
+---------------
+nMDS
+_______________
+
+
+```{r}
+#Data
+set.seed(199)
+#Ordination
+NMDS_eDNA<-metaMDS(edna_reads, distance = "jac", binary=TRUE, autotransform = FALSE, k=2, trymax=5000)
+NMDS_UVC<-metaMDS(data_UVC, distance = "jac", binary=TRUE, autotransform = FALSE, k=2, trymax=5000)
+
+```
+
+
+
+```{r}
+name<-c("POR","BSS","ANI","SDI","SCR","MAT","CAT","MON","DAN","CAR","COR","PUL","ILD","SMAR","TOR","NOL","PMA", "FRA","LOR","IA-I","LOB","PAT", "TIB","EST")
+
+#UVC
+par(mfrow=c(2,1), mar=c(3, 3, 1, 1))
+par(mgp=c(1.7,1,0)) 
+plot(NMDS_UVC$points, col=region1,  pch = 16, 
+     cex=0.7, xlab="NMDS 1", ylab="NMDS 2", cex.lab=0.7, 
+     cex.axis=0.5, font.lab=1, xlim = c(-1.4,1.2),ylim = c(-1.05,0.7),family="Helvetica")
+title("A) UVC", line=0.2,adj=0, font=1, cex.main=0.9, col.main="black", family="Helvetica")
+text(NMDS_UVC$points+0.06, labels=name, cex=0.5, col="black", font=1)
+#text(-1.2,0.2,labels="North", cex=0.9,font=4,col="grey")
+#text(0.85,0.17,labels="Central", cex=0.9,font=4,col="grey")
+#connect the points that belong to the same region with ordispader
+ordispider(NMDS_UVC, groups = region1,lty=3, label=F,cex=0.5,font=6,col="grey1")
+#ordiellipse(NMDS_UVC, groups=region2, lty=2, col="grey", label=F)
+#Add legend
+txt<-c("Stress 0.109", "ANOSIM R: 0.607","p: 0.0009")
+legend('bottomleft', txt , cex=0.6, bty="n")
+
+#EDNA
+par(mgp=c(1.7,1,0)) 
+plot(NMDS_eDNA$points, col=region1,  pch = 16, cex=0.7, xlab="NMDS 1", ylab="NMDS 2", cex.lab=0.7, cex.axis=0.5, font.lab=1,xlim = c(-0.4,0.4),ylim = c(-0.35,0.34),)
+title("B) eDNA", line=0.2,adj=0, font=2, cex.main=0.9, col.main="black",family="Helvetica")
+text(NMDS_eDNA$points+0.025, labels=name, cex=0.5, col="black", font=1)
+#text(-0.32,0.15,labels="North", cex=0.9,font=4, col="grey")
+#text(0.32,-0.18,labels="Central", cex=0.9,font=4,col="grey")
+#connect the points that belong to the same region with ordispader
+ordispider(NMDS_eDNA, groups = region1,lty=3, label=F,cex=0.5,font=4, col="grey1")
+#ordiellipse(NMDS_eDNA, groups=region2, lty=2, col="grey", label=F)
+#Add legend
+txt<-c("Stress 0.217", "ANOSIM R: 0.202","p: 0.035")
+legend('bottomleft', txt ,cex=0.6, bty="n")
+```
+
+----------------
+ANOSIM
+----------------
+
+```{r}
+fit_S_UVC<-anosim(data_UVC, region1, permutation=1000, distance = "jac")
+summary(fit_S_UVC)
+```
+
+```{r}
+anosim(data_UVC,grouping = region1, distance = "jac")
+```
+
+----------------------
+MANTEL
+----------------------
+
+Geographic distance matrix calculator
+```{r}
+# Euclidean distance matrix on spatial coordinates (2D)
+geo.dist.matrix <- dist(spa, method="euclidean")
+```
+
+eDNA Jaccard *geodist
+```{r}
+spe.jac<-vegdist(edna_reads,method = "jaccard", binary = TRUE)
+(spe.vs.geo = mantel(spe.jac,geo.dist.matrix, method = "spearman", permutations = 9999, na.rm = TRUE))
+```
+
+UVC Jaccard*geodist
+```{r}
+UVC.jac<-vegdist(data_UVC, method="jaccard", binary = TRUE)
+(UVC.jac.geodist = mantel(UVC.jac,geo.dist.matrix, method = "spearman", permutations = 9999, na.rm = TRUE))
+```
+
+-----------------------------------------------
+Species richness comparisons
+-----------------------------------------------
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(forcats)
+```
+
+```{r}
+Sobs_m_r<-read.csv("/Volumes/GoogleDrive/Mi unidad/Doctorado CICESE/eDNA/Valdivia_etal_2021_community_analyses/Sobs_method_region.csv",header=TRUE, colClasses = c("factor","factor","factor","numeric"))
+head(Sobs_m_r)
+```
+
+```{r}
+t.test(Sobs_m_r$Sobs)
+```
+
+```{r}
+two.way.interaction<-aov(Sobs_m_r$Sobs~Sobs_m_r$Survey.method*Sobs_m_r$GOC.region)
+summary(two.way.interaction)
+```
+
+```{r}
+two.way.sum<-aov(Sobs_m_r$Sobs~Sobs_m_r$Survey.method+Sobs_m_r$GOC.region)
+summary(two.way.sum)
+```
+
+
+```{r} 
+tukey.two.way<-TukeyHSD(two.way.sum)
+tukey.two.way
+```
+
+```{r}
+Richness_method<-read.csv("Sobs.csv",header=TRUE)
+
+p13<-Sobs_m_r%>%
+ggplot(aes(x=fct_reorder(Survey.method,Sobs, .desc=T),y=Sobs, fill=Survey.method)) +
+  geom_boxplot() + 
+   geom_jitter(width=0.3, alpha=1) +
+   xlab("GC region")+
+   theme(axis.title.x= element_blank(), axis.title = element_text(face = "bold"), legend.title=element_blank(),legend.position = ("none"))+
+   facet_wrap(~GOC.region)
+
+p13 + scale_fill_grey(start=0.8, end=0.5) + theme_linedraw()
+
+#text=element_text(size=11, family="Helvetica"),axis.title = element_text(face = "bold"),axis.text.x=element_text(size=11),
+```
+
+```{r}
+
+p14<-Sobs_m_r%>%
+ggplot(aes(x=fct_reorder(GOC.region,Sobs, .desc=T),y=Sobs, fill=GOC.region)) +
+  geom_boxplot() + 
+   geom_jitter(width=0.3, alpha=1) +
+   xlab("Survey method")+
+   theme(axis.title.x=element_blank(),axis.title = element_text(face = "bold"),legend.title=element_blank(),legend.position = ("none"))+
+   facet_wrap(~Survey.method)
+
+p14 + scale_fill_grey(start=0.9, end=0.5) + theme_linedraw()
+
+#axis.text.x= element_blank(),
+```
+
+
