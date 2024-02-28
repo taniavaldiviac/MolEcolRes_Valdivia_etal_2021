@@ -2,4 +2,4 @@
 
 ### Valdivia et al. 2021, Molecular Ecology Resources
 
-Community ecology analyses for the publication: [DOI: 10.1111/1755-0998.13375](https://)
+Community ecology analyses for the publication:  https://doi.org/10.1111/1755-0998.13375
